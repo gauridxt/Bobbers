@@ -14,6 +14,9 @@ export default function Home() {
               </p>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
+              <a href="/" className="text-navy-900 font-bold transition-colors border-b-2 border-navy-900">
+                Home
+              </a>
               <a href="#events" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
                 Events
               </a>

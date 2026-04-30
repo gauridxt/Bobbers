@@ -19,6 +19,9 @@ export default function About() {
               <a href="/" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
                 Home
               </a>
+              <a href="/#events" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
+                Events
+              </a>
               <a href="/about" className="text-navy-900 font-bold transition-colors border-b-2 border-navy-900">
                 About
               </a>
