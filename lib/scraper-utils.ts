@@ -2,6 +2,14 @@
 
 import { ScrapedEventData, PriceInfo, ContactInfo, Presenter } from './scraper-types';
 
+// Configuration constants
+const CONTEXT_WINDOW_SIZE = 50;
+const MAX_CONTEXT_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 500;
+const MIN_COMPANY_NAME_LENGTH = 2;
+const MAX_COMPANY_NAME_LENGTH = 50;
+const MIN_LANGUAGE_WORD_THRESHOLD = 2;
+
 /**
  * Extract price information from text
  * Handles various formats: CHF 50, $100, €75, Free, etc.
@@ -42,12 +50,14 @@ export function extractPrices(text: string): PriceInfo[] {
       
       // Try to determine price type from context
       let type = 'Regular';
-      const contextBefore = text.substring(Math.max(0, match.index! - 50), match.index!).toLowerCase();
-      
-      for (const priceType of priceTypes) {
-        if (contextBefore.includes(priceType.toLowerCase())) {
-          type = priceType;
-          break;
+      if (match.index !== undefined) {
+        const contextBefore = text.substring(Math.max(0, match.index - CONTEXT_WINDOW_SIZE), match.index).toLowerCase();
+        
+        for (const priceType of priceTypes) {
+          if (contextBefore.includes(priceType.toLowerCase())) {
+            type = priceType;
+            break;
+          }
         }
       }
       
@@ -138,10 +148,13 @@ export function extractPresenters(text: string): Presenter[] {
             foundNames.add(name);
             
             // Try to extract title/company from context
-            const contextAfter = text.substring(
-              match.index! + match[0].length,
-              Math.min(text.length, match.index! + match[0].length + 100)
-            );
+            let contextAfter = '';
+            if (match.index !== undefined) {
+              contextAfter = text.substring(
+                match.index + match[0].length,
+                Math.min(text.length, match.index + match[0].length + MAX_CONTEXT_LENGTH)
+              );
+            }
             
             const titleMatch = contextAfter.match(/,\s*([^,\n]+?)(?:,|\sat\s)/);
             const companyMatch = contextAfter.match(/(?:at|from)\s+([^,.\n]+)/);
@@ -177,7 +190,8 @@ export function extractCompanies(text: string): string[] {
     for (const match of matches) {
       const company = match[1].trim();
       // Filter out common false positives
-      if (company.length > 2 && company.length < 50 && 
+      if (company.length > MIN_COMPANY_NAME_LENGTH &&
+          company.length < MAX_COMPANY_NAME_LENGTH &&
           !/^(the|and|or|with|will|is|are)$/i.test(company)) {
         companies.add(company);
       }
@@ -205,6 +219,7 @@ export function extractTopics(text: string): string[] {
     'UX', 'UI', 'Design', 'Networking', 'System Administration'
   ];
 
+  // Cache lowercase conversion for performance
   const lowerText = text.toLowerCase();
   
   techKeywords.forEach(keyword => {
@@ -277,8 +292,15 @@ export function detectLanguage(text: string): 'English' | 'German' | 'French' | 
   if (frenchCount > germanCount && frenchCount > italianCount && frenchCount >= 2) {
     return 'French';
   }
-  if (italianCount > germanCount && italianCount > frenchCount && italianCount >= 2) {
+  if (italianCount > germanCount && italianCount > frenchCount && italianCount >= MIN_LANGUAGE_WORD_THRESHOLD) {
     return 'Italian';
+  }
+  
+  // Only return non-English if we have sufficient evidence
+  if (germanCount >= MIN_LANGUAGE_WORD_THRESHOLD ||
+      frenchCount >= MIN_LANGUAGE_WORD_THRESHOLD ||
+      italianCount >= MIN_LANGUAGE_WORD_THRESHOLD) {
+    return 'English';
   }
   
   return 'English';

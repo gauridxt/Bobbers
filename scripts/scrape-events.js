@@ -4,48 +4,15 @@
  */
 
 const { EventScraperOrchestrator } = require('../lib/event-scraper');
+const { SCRAPER_SOURCES } = require('../lib/scraper-config');
 
 async function main() {
   console.log('🚀 Starting event scraping...\n');
 
   const orchestrator = new EventScraperOrchestrator();
 
-  // Add sources
-  const sources = [
-    {
-      name: 'meetup',
-      base_url: 'https://www.meetup.com/find/?location=ch--Zurich&source=EVENTS',
-      scraper_config: {
-        url: 'https://www.meetup.com/find/?location=ch--Zurich&source=EVENTS',
-        selectors: {
-          title: '.event-title',
-          description: '.event-description',
-          date: '.event-date',
-          location: '.event-location'
-        },
-        type: 'dynamic'
-      },
-      enabled: true
-    },
-    {
-      name: 'eventbrite',
-      base_url: 'https://www.eventbrite.com/d/switzerland--zurich/events/',
-      scraper_config: {
-        url: 'https://www.eventbrite.com/d/switzerland--zurich/events/',
-        selectors: {
-          title: '.event-title',
-          description: '.event-description',
-          date: '.event-date',
-          location: '.event-location',
-          price: '.ticket-price'
-        },
-        type: 'static'
-      },
-      enabled: true
-    }
-  ];
-
-  sources.forEach(source => {
+  // Add sources from shared configuration
+  SCRAPER_SOURCES.forEach(source => {
     orchestrator.addSource(source);
     console.log(`✓ Added source: ${source.name}`);
   });

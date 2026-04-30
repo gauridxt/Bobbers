@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  EventScraperOrchestrator,
-  MeetupScraper,
-  EventbriteScraper,
-  LinkedInScraper,
-  CustomScraper
-} from '@/lib/event-scraper';
-import { EventSourceConfig, ScraperResult } from '@/lib/scraper-types';
+import { scrapeAllSources, scrapeEventbrite, scrapeMeetup } from '@/lib/real-scraper';
+import { ScraperResult } from '@/lib/scraper-types';
 import { categorizeEvent, detectLanguage } from '@/lib/scraper-utils';
 import { eventService } from '@/lib/supabase';
+import { SCRAPER_SOURCES } from '@/lib/scraper-config';
+
+// Valid modes for scraping
+const VALID_MODES = ['store', 'preview', 'both'] as const;
+type ScraperMode = typeof VALID_MODES[number];
+
+function isValidMode(mode: any): mode is ScraperMode {
+  return VALID_MODES.includes(mode);
+}
 
 /**
  * POST /api/scrape
@@ -16,32 +19,33 @@ import { eventService } from '@/lib/supabase';
  */
 export async function POST(request: NextRequest) {
   try {
+    // TODO: Add authentication check here
+    // Example: const session = await getServerSession();
+    // if (!session || !session.user.isAdmin) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
+
     const body = await request.json();
     const { sources, mode } = body;
 
-    // Validate request
-    if (!sources || !Array.isArray(sources)) {
+    // Validate mode parameter
+    if (mode && !isValidMode(mode)) {
       return NextResponse.json(
-        { error: 'Invalid request: sources array required' },
+        { error: `Invalid mode. Must be one of: ${VALID_MODES.join(', ')}` },
         { status: 400 }
       );
     }
 
-    const orchestrator = new EventScraperOrchestrator();
+    console.log('Starting real web scraping...');
 
-    // Add sources to orchestrator
-    for (const source of sources) {
-      orchestrator.addSource(source as EventSourceConfig);
-    }
+    // Scrape from real sources
+    const results = await scrapeAllSources();
 
-    // Scrape all sources
-    const results = await orchestrator.scrapeAll();
-
-    // Process and categorize events
-    const processedEvents = orchestrator.processEvents(results);
+    // Collect all events from results
+    const allEvents = results.flatMap(r => r.events);
 
     // Add category and language to each event
-    const enrichedEvents = processedEvents.map(event => ({
+    const enrichedEvents = allEvents.map(event => ({
       ...event,
       category: categorizeEvent(event),
       language: detectLanguage(`${event.title} ${event.description}`)
@@ -50,13 +54,14 @@ export async function POST(request: NextRequest) {
     // Store events in database if mode is 'store' or 'both'
     let storageResult = null;
     if (mode === 'store' || mode === 'both' || !mode) {
+      console.log(`Storing ${enrichedEvents.length} events in database...`);
       storageResult = await eventService.storeScrapedEvents(enrichedEvents);
     }
 
     return NextResponse.json({
       success: true,
       total_events: enrichedEvents.length,
-      events: mode === 'preview' ? enrichedEvents : undefined,
+      events: mode === 'preview' || mode === 'both' ? enrichedEvents : undefined,
       storage: storageResult,
       results: results.map(r => ({
         source: r.source,
@@ -69,8 +74,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Scraping error:', error);
+    
+    // Log full error server-side for debugging
+    if (error instanceof Error) {
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to scrape events',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -84,58 +95,9 @@ export async function POST(request: NextRequest) {
  * Get available scraping sources
  */
 export async function GET(request: NextRequest) {
-  const availableSources: EventSourceConfig[] = [
-    {
-      name: 'meetup',
-      base_url: 'https://www.meetup.com/find/?location=ch--Zurich&source=EVENTS',
-      scraper_config: {
-        url: 'https://www.meetup.com/find/?location=ch--Zurich&source=EVENTS',
-        selectors: {
-          title: '.event-title',
-          description: '.event-description',
-          date: '.event-date',
-          location: '.event-location'
-        },
-        type: 'dynamic'
-      },
-      enabled: true
-    },
-    {
-      name: 'eventbrite',
-      base_url: 'https://www.eventbrite.com/d/switzerland--zurich/events/',
-      scraper_config: {
-        url: 'https://www.eventbrite.com/d/switzerland--zurich/events/',
-        selectors: {
-          title: '.event-title',
-          description: '.event-description',
-          date: '.event-date',
-          location: '.event-location',
-          price: '.ticket-price'
-        },
-        type: 'static'
-      },
-      enabled: true
-    },
-    {
-      name: 'linkedin',
-      base_url: 'https://www.linkedin.com/events/',
-      scraper_config: {
-        url: 'https://www.linkedin.com/events/',
-        selectors: {
-          title: '.event-card__title',
-          description: '.event-card__description',
-          date: '.event-card__date',
-          location: '.event-card__location'
-        },
-        type: 'dynamic'
-      },
-      enabled: false // Requires authentication
-    }
-  ];
-
   return NextResponse.json({
-    sources: availableSources,
-    total: availableSources.length
+    sources: SCRAPER_SOURCES,
+    total: SCRAPER_SOURCES.length
   });
 }
 
@@ -145,23 +107,36 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { url, html, selectors, type } = body;
+    // TODO: Add authentication check here
+    // Example: const session = await getServerSession();
+    // if (!session || !session.user.isAdmin) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
 
-    if (!url) {
+    const body = await request.json();
+    const { source } = body;
+
+    // Validate source parameter
+    const validSources = ['eventbrite', 'meetup'];
+    if (!source || !validSources.includes(source)) {
       return NextResponse.json(
-        { error: 'URL is required' },
+        { error: `Invalid source. Must be one of: ${validSources.join(', ')}` },
         { status: 400 }
       );
     }
 
-    const scraper = new CustomScraper({
-      url,
-      selectors: selectors || {},
-      type: type || 'static'
-    });
-
-    const result = await scraper.scrape(html);
+    let result;
+    
+    if (source === 'eventbrite') {
+      result = await scrapeEventbrite();
+    } else if (source === 'meetup') {
+      result = await scrapeMeetup();
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid source. Use "eventbrite" or "meetup"' },
+        { status: 400 }
+      );
+    }
 
     // Enrich events with category and language
     const enrichedEvents = result.events.map(event => ({
@@ -170,18 +145,28 @@ export async function PUT(request: NextRequest) {
       language: detectLanguage(`${event.title} ${event.description}`)
     }));
 
+    // Store in database
+    const storageResult = await eventService.storeScrapedEvents(enrichedEvents);
+
     return NextResponse.json({
       success: result.success,
       events: enrichedEvents,
       total_events: enrichedEvents.length,
+      storage: storageResult,
       scraped_at: result.scraped_at
     });
 
   } catch (error) {
     console.error('Custom scraping error:', error);
+    
+    // Log full error server-side for debugging
+    if (error instanceof Error) {
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
-      { 
-        error: 'Failed to scrape custom URL',
+      {
+        error: 'Failed to scrape events',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

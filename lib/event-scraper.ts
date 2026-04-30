@@ -20,6 +20,12 @@ import {
   parseEventDate
 } from './scraper-utils';
 
+// Configuration constants
+const MIN_TITLE_LENGTH = 10;
+const MAX_TITLE_LENGTH = 100;
+const MIN_LOCATION_LENGTH = 5;
+const MAX_LOCATION_LENGTH = 100;
+
 /**
  * Base scraper class
  */
@@ -115,7 +121,7 @@ export class EventScraper {
 
   private extractTitle(text: string): string {
     // Look for title patterns
-    const titleMatch = text.match(/^(.{10,100}?)(?:\n|$)/);
+    const titleMatch = text.match(new RegExp(`^(.{${MIN_TITLE_LENGTH},${MAX_TITLE_LENGTH}}?)(?:\\n|$)`));
     return titleMatch ? titleMatch[1].trim() : '';
   }
 
@@ -135,7 +141,7 @@ export class EventScraper {
 
     for (const pattern of datePatterns) {
       const match = text.match(pattern);
-      if (match) {
+      if (match && match[0]) {
         const parsed = parseEventDate(match[0]);
         if (parsed) return parsed;
       }
@@ -147,13 +153,13 @@ export class EventScraper {
   protected extractLocation(text: string): string {
     // Look for location patterns
     const locationPatterns = [
-      /(?:at|location:|venue:)\s*([^,\n]{5,100})/i,
+      new RegExp(`(?:at|location:|venue:)\\s*([^,\\n]{${MIN_LOCATION_LENGTH},${MAX_LOCATION_LENGTH}})`, 'i'),
       /\b(Zurich|Zürich|Geneva|Basel|Bern|Lausanne)[^,\n]{0,50}/i
     ];
 
     for (const pattern of locationPatterns) {
       const match = text.match(pattern);
-      if (match) {
+      if (match && (match[1] || match[0])) {
         return match[1] || match[0];
       }
     }
