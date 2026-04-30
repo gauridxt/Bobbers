@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Extract and validate required fields
-    const { title, description, date_time, location, rsvp_url } = body;
+    const { title, description, date_time, location, rsvp_url, free_food } = body;
     
     // Validation errors
     const errors: Record<string, string> = {};
@@ -95,7 +95,8 @@ export async function POST(request: NextRequest) {
       location: location.trim(),
       category,
       language,
-      rsvp_url: rsvpUrl
+      rsvp_url: rsvpUrl,
+      free_food: free_food === true // Default to false if not provided or invalid
     };
     
     // Store event in database

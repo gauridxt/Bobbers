@@ -130,7 +130,8 @@ export const eventService = {
           location: scrapedEvent.location,
           category: category as EventCategory,
           language: language as EventLanguage,
-          rsvp_url: scrapedEvent.source_url
+          rsvp_url: scrapedEvent.source_url,
+          free_food: scrapedEvent.free_food || false // Default to false if not specified
         };
 
         // Check if event already exists (by title and date)
@@ -186,6 +187,7 @@ export const eventService = {
     minPrice?: number;
     maxPrice?: number;
     location?: string;
+    freeFood?: boolean;
   }): Promise<Event[]> {
     let query = supabase
       .from('events')
@@ -226,6 +228,11 @@ export const eventService = {
     // Location filter
     if (params.location && params.location.trim() !== '') {
       query = query.ilike('location', `%${params.location}%`);
+    }
+
+    // Free food filter
+    if (params.freeFood === true) {
+      query = query.eq('free_food', true);
     }
 
     const { data, error } = await query;

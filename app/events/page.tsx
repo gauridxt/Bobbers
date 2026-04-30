@@ -9,6 +9,7 @@ interface FormData {
   date_time: string;
   location: string;
   rsvp_url: string;
+  free_food: boolean;
 }
 
 interface FormErrors {
@@ -22,6 +23,7 @@ export default function Events() {
   const [selectedCategories, setSelectedCategories] = useState<EventCategory[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<EventLanguage[]>([]);
   const [locationFilter, setLocationFilter] = useState('');
+  const [freeFoodOnly, setFreeFoodOnly] = useState(false);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<'search' | 'post'>('search');
@@ -32,7 +34,8 @@ export default function Events() {
     description: '',
     date_time: '',
     location: '',
-    rsvp_url: ''
+    rsvp_url: '',
+    free_food: false
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -46,7 +49,7 @@ export default function Events() {
   // Fetch events
   useEffect(() => {
     fetchEvents();
-  }, [searchQuery, selectedCategories, selectedLanguages, locationFilter]);
+  }, [searchQuery, selectedCategories, selectedLanguages, locationFilter, freeFoodOnly]);
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -56,6 +59,7 @@ export default function Events() {
       if (selectedCategories.length > 0) params.append('categories', selectedCategories.join(','));
       if (selectedLanguages.length > 0) params.append('languages', selectedLanguages.join(','));
       if (locationFilter) params.append('location', locationFilter);
+      if (freeFoodOnly) params.append('freeFood', 'true');
 
       const response = await fetch(`/api/events/search?${params.toString()}`);
       const data = await response.json();
@@ -175,7 +179,8 @@ export default function Events() {
           description: '',
           date_time: '',
           location: '',
-          rsvp_url: ''
+          rsvp_url: '',
+          free_food: false
         });
         setErrors({});
         // Refresh events list
@@ -197,7 +202,7 @@ export default function Events() {
   };
 
   // Handle input changes
-  const handleEventInputChange = (field: keyof FormData, value: string) => {
+  const handleEventInputChange = (field: keyof FormData, value: string | boolean) => {
     setEventForm(prev => ({ ...prev, [field]: value }));
     // Clear error for this field when user starts typing
     if (errors[field]) {
@@ -353,6 +358,19 @@ export default function Events() {
                       className="w-full px-4 py-2 border border-navy-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
                     />
                   </div>
+
+                  {/* Free Food Filter */}
+                  <div>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={freeFoodOnly}
+                        onChange={(e) => setFreeFoodOnly(e.target.checked)}
+                        className="w-4 h-4 text-navy-800 border-navy-300 rounded focus:ring-navy-500"
+                      />
+                      <span className="text-sm font-semibold text-navy-700">🍕 Free Food Only</span>
+                    </label>
+                  </div>
                 </div>
               ) : (
                 /* Event Submission Form Content */
@@ -481,6 +499,26 @@ export default function Events() {
                       {errors.rsvp_url && <p className="mt-1 text-sm text-red-600">{errors.rsvp_url}</p>}
                     </div>
 
+                    {/* Free Food Checkbox */}
+                    <div>
+                      <label className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          id="event-free-food"
+                          checked={eventForm.free_food}
+                          onChange={(e) => handleEventInputChange('free_food', e.target.checked)}
+                          className="w-5 h-5 text-navy-800 border-navy-300 rounded focus:ring-navy-500"
+                          disabled={isSubmitting}
+                        />
+                        <span className="text-sm font-semibold text-navy-700">
+                          🍕 Free Food Provided
+                        </span>
+                      </label>
+                      <p className="mt-1 text-xs text-navy-500 ml-8">
+                        Check this if your event provides free food or refreshments
+                      </p>
+                    </div>
+
                     {/* Info Note */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-start">
@@ -538,13 +576,18 @@ export default function Events() {
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
               >
                 <div className="p-6">
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
                     <span className="px-3 py-1 bg-navy-100 text-navy-800 text-xs font-semibold rounded-full">
                       {event.category}
                     </span>
                     <span className="px-3 py-1 bg-cream-100 text-navy-700 text-xs font-semibold rounded-full">
                       {event.language}
                     </span>
+                    {event.free_food && (
+                      <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                        🍕 Free Food
+                      </span>
+                    )}
                   </div>
                   
                   <h3 className="text-xl font-bold text-navy-900 mb-2 line-clamp-2">

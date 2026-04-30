@@ -11,6 +11,7 @@ export interface ScrapedEventData {
   companies_attending?: string[];
   presenters?: Presenter[];
   source_url: string;
+  free_food?: boolean; // Indicates if event provides free food
   raw_html?: string;
 }
 

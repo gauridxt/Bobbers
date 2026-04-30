@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined;
     const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined;
     const location = searchParams.get('location') || undefined;
+    const freeFood = searchParams.get('freeFood') === 'true' ? true : undefined;
 
     // Search events with filters
     const events = await eventService.searchEvents({
@@ -28,7 +29,8 @@ export async function GET(request: NextRequest) {
       endDate,
       minPrice,
       maxPrice,
-      location
+      location,
+      freeFood
     });
 
     return NextResponse.json({
@@ -43,7 +45,8 @@ export async function GET(request: NextRequest) {
         endDate,
         minPrice,
         maxPrice,
-        location
+        location,
+        freeFood
       }
     });
 

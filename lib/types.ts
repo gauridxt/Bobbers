@@ -14,6 +14,7 @@ export interface Event {
   category: EventCategory;
   language: EventLanguage;
   rsvp_url: string;
+  free_food?: boolean; // Indicates if event provides free food (default: false)
   created_at?: string;
   updated_at?: string;
 }
