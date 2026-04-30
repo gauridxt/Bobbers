@@ -23,6 +23,9 @@ export default function Events() {
   const [selectedLanguages, setSelectedLanguages] = useState<EventLanguage[]>([]);
   const [locationFilter, setLocationFilter] = useState('');
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'search' | 'post'>('search');
+
   // Event submission form state
   const [eventForm, setEventForm] = useState<FormData>({
     title: '',
@@ -252,233 +255,269 @@ export default function Events() {
           </p>
         </div>
 
-        {/* Event Submission Form */}
+        {/* Tabbed Interface Box */}
         <section className="mb-16">
-          <div className="card p-10 bg-navy-50">
-            <div className="text-center mb-8">
-              <div className="inline-block mb-4 px-4 py-2 bg-white rounded-full">
-                <span className="text-navy-700 font-semibold text-sm">
-                  🎉 Submit Your Event
-                </span>
-              </div>
-              <h2 className="text-3xl font-display font-bold text-navy-900 mb-4">
-                List Your Tech Event
-              </h2>
-              <p className="text-navy-600 max-w-2xl mx-auto">
-                Organizing a tech event in Zurich? Share it with our community! Fill out the form below and your event will be published immediately.
-              </p>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Tab Header */}
+            <div className="flex border-b border-navy-200" role="tablist">
+              <button
+                role="tab"
+                aria-selected={activeTab === 'search'}
+                onClick={() => setActiveTab('search')}
+                className={`flex-1 px-6 py-4 text-base font-medium transition-all duration-200 ${
+                  activeTab === 'search'
+                    ? 'text-navy-900 font-semibold border-b-3 border-navy-800 bg-white'
+                    : 'text-navy-600 font-medium border-b-3 border-transparent bg-white hover:bg-navy-50 hover:text-navy-900'
+                }`}
+              >
+                Search Events
+              </button>
+              <button
+                role="tab"
+                aria-selected={activeTab === 'post'}
+                onClick={() => setActiveTab('post')}
+                className={`flex-1 px-6 py-4 text-base font-medium transition-all duration-200 ${
+                  activeTab === 'post'
+                    ? 'text-navy-900 font-semibold border-b-3 border-navy-800 bg-white'
+                    : 'text-navy-600 font-medium border-b-3 border-transparent bg-white hover:bg-navy-50 hover:text-navy-900'
+                }`}
+              >
+                Post Event
+              </button>
             </div>
 
-            {/* Success/Error Messages */}
-            {submitStatus === 'success' && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-start">
-                  <span className="text-2xl mr-3">✅</span>
+            {/* Tab Content */}
+            <div className="p-6" role="tabpanel">
+              {activeTab === 'search' ? (
+                /* Search and Filters Content */
+                <div>
+                  {/* Search Bar */}
+                  <div className="mb-6">
+                    <input
+                      type="text"
+                      placeholder="Search events by title, description, or organizer..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-3 border border-navy-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
+                    />
+                  </div>
+
+                  {/* Category Filters */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-navy-700 mb-3">Categories</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((category) => (
+                        <button
+                          key={category}
+                          onClick={() => toggleCategory(category)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            selectedCategories.includes(category)
+                              ? 'bg-navy-800 text-white'
+                              : 'bg-navy-50 text-navy-700 hover:bg-navy-100'
+                          }`}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Language Filters */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-navy-700 mb-3">Languages</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {languages.map((language) => (
+                        <button
+                          key={language}
+                          onClick={() => toggleLanguage(language)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            selectedLanguages.includes(language)
+                              ? 'bg-navy-800 text-white'
+                              : 'bg-navy-50 text-navy-700 hover:bg-navy-100'
+                          }`}
+                        >
+                          {language}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location Filter */}
                   <div>
-                    <h4 className="font-semibold text-green-900 mb-1">Success!</h4>
-                    <p className="text-green-700">{submitMessage}</p>
+                    <h3 className="text-sm font-semibold text-navy-700 mb-3">Location</h3>
+                    <input
+                      type="text"
+                      placeholder="Filter by location..."
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                      className="w-full px-4 py-2 border border-navy-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
+                    />
                   </div>
                 </div>
-              </div>
-            )}
-
-            {submitStatus === 'error' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start">
-                  <span className="text-2xl mr-3">❌</span>
-                  <div>
-                    <h4 className="font-semibold text-red-900 mb-1">Error</h4>
-                    <p className="text-red-700">{submitMessage}</p>
+              ) : (
+                /* Event Submission Form Content */
+                <div>
+                  <div className="text-center mb-8">
+                    <div className="inline-block mb-4 px-4 py-2 bg-navy-50 rounded-full">
+                      <span className="text-navy-700 font-semibold text-sm">
+                        🎉 Submit Your Event
+                      </span>
+                    </div>
+                    <h2 className="text-3xl font-display font-bold text-navy-900 mb-4">
+                      List Your Tech Event
+                    </h2>
+                    <p className="text-navy-600 max-w-2xl mx-auto">
+                      Organizing a tech event in Zurich? Share it with our community! Fill out the form below and your event will be published immediately.
+                    </p>
                   </div>
-                </div>
-              </div>
-            )}
 
-            <form onSubmit={handleEventSubmit} className="max-w-3xl mx-auto space-y-6">
-              {/* Title */}
-              <div>
-                <label htmlFor="event-title" className="block text-sm font-semibold text-navy-700 mb-2">
-                  Event Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="event-title"
-                  value={eventForm.title}
-                  onChange={(e) => handleEventInputChange('title', e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${errors.title ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
-                  placeholder="e.g., AI & Machine Learning Meetup"
-                  disabled={isSubmitting}
-                />
-                {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label htmlFor="event-description" className="block text-sm font-semibold text-navy-700 mb-2">
-                  Description <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="event-description"
-                  rows={6}
-                  value={eventForm.description}
-                  onChange={(e) => handleEventInputChange('description', e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${errors.description ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors resize-none bg-white`}
-                  placeholder="Describe your event, what attendees will learn, and what to expect..."
-                  disabled={isSubmitting}
-                />
-                {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
-              </div>
-
-              {/* Date and Time */}
-              <div>
-                <label htmlFor="event-datetime" className="block text-sm font-semibold text-navy-700 mb-2">
-                  Date & Time <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  id="event-datetime"
-                  value={eventForm.date_time}
-                  onChange={(e) => handleEventInputChange('date_time', e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${errors.date_time ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
-                  disabled={isSubmitting}
-                />
-                {errors.date_time && <p className="mt-1 text-sm text-red-600">{errors.date_time}</p>}
-              </div>
-
-              {/* Location */}
-              <div>
-                <label htmlFor="event-location" className="block text-sm font-semibold text-navy-700 mb-2">
-                  Location <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="event-location"
-                  value={eventForm.location}
-                  onChange={(e) => handleEventInputChange('location', e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${errors.location ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
-                  placeholder="e.g., Google Zurich, Europaallee 36, 8004 Zürich"
-                  disabled={isSubmitting}
-                />
-                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
-              </div>
-
-              {/* RSVP URL */}
-              <div>
-                <label htmlFor="event-url" className="block text-sm font-semibold text-navy-700 mb-2">
-                  RSVP/Event URL <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="url"
-                  id="event-url"
-                  value={eventForm.rsvp_url}
-                  onChange={(e) => handleEventInputChange('rsvp_url', e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${errors.rsvp_url ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
-                  placeholder="https://example.com/event"
-                  disabled={isSubmitting}
-                />
-                {errors.rsvp_url && <p className="mt-1 text-sm text-red-600">{errors.rsvp_url}</p>}
-              </div>
-
-              {/* Info Note */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <span className="text-xl mr-3">ℹ️</span>
-                  <div className="text-sm text-blue-800">
-                    <p className="font-semibold mb-1">Auto-Detection</p>
-                    <p>The event category and language will be automatically detected based on your title and description. Your event will be published immediately after submission.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="text-center pt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`btn-primary text-base px-8 py-4 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Submitting...
-                    </span>
-                  ) : (
-                    'Submit Event'
+                  {/* Success/Error Messages */}
+                  {submitStatus === 'success' && (
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-start">
+                        <span className="text-2xl mr-3">✅</span>
+                        <div>
+                          <h4 className="font-semibold text-green-900 mb-1">Success!</h4>
+                          <p className="text-green-700">{submitMessage}</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </button>
-              </div>
-            </form>
+
+                  {submitStatus === 'error' && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-start">
+                        <span className="text-2xl mr-3">❌</span>
+                        <div>
+                          <h4 className="font-semibold text-red-900 mb-1">Error</h4>
+                          <p className="text-red-700">{submitMessage}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleEventSubmit} className="max-w-3xl mx-auto space-y-6">
+                    {/* Title */}
+                    <div>
+                      <label htmlFor="event-title" className="block text-sm font-semibold text-navy-700 mb-2">
+                        Event Title <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="event-title"
+                        value={eventForm.title}
+                        onChange={(e) => handleEventInputChange('title', e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border ${errors.title ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
+                        placeholder="e.g., AI & Machine Learning Meetup"
+                        disabled={isSubmitting}
+                      />
+                      {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label htmlFor="event-description" className="block text-sm font-semibold text-navy-700 mb-2">
+                        Description <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        id="event-description"
+                        rows={6}
+                        value={eventForm.description}
+                        onChange={(e) => handleEventInputChange('description', e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border ${errors.description ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors resize-none bg-white`}
+                        placeholder="Describe your event, what attendees will learn, and what to expect..."
+                        disabled={isSubmitting}
+                      />
+                      {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+                    </div>
+
+                    {/* Date and Time */}
+                    <div>
+                      <label htmlFor="event-datetime" className="block text-sm font-semibold text-navy-700 mb-2">
+                        Date & Time <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        id="event-datetime"
+                        value={eventForm.date_time}
+                        onChange={(e) => handleEventInputChange('date_time', e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border ${errors.date_time ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
+                        disabled={isSubmitting}
+                      />
+                      {errors.date_time && <p className="mt-1 text-sm text-red-600">{errors.date_time}</p>}
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <label htmlFor="event-location" className="block text-sm font-semibold text-navy-700 mb-2">
+                        Location <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="event-location"
+                        value={eventForm.location}
+                        onChange={(e) => handleEventInputChange('location', e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border ${errors.location ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
+                        placeholder="e.g., Google Zurich, Europaallee 36, 8004 Zürich"
+                        disabled={isSubmitting}
+                      />
+                      {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+                    </div>
+
+                    {/* RSVP URL */}
+                    <div>
+                      <label htmlFor="event-url" className="block text-sm font-semibold text-navy-700 mb-2">
+                        RSVP/Event URL <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="url"
+                        id="event-url"
+                        value={eventForm.rsvp_url}
+                        onChange={(e) => handleEventInputChange('rsvp_url', e.target.value)}
+                        className={`w-full px-4 py-3 rounded-lg border ${errors.rsvp_url ? 'border-red-500' : 'border-navy-200'} focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors bg-white`}
+                        placeholder="https://example.com/event"
+                        disabled={isSubmitting}
+                      />
+                      {errors.rsvp_url && <p className="mt-1 text-sm text-red-600">{errors.rsvp_url}</p>}
+                    </div>
+
+                    {/* Info Note */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <span className="text-xl mr-3">ℹ️</span>
+                        <div className="text-sm text-blue-800">
+                          <p className="font-semibold mb-1">Auto-Detection</p>
+                          <p>The event category and language will be automatically detected based on your title and description. Your event will be published immediately after submission.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="text-center pt-4">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`btn-primary text-base px-8 py-4 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isSubmitting ? (
+                          <span className="flex items-center justify-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Submitting...
+                          </span>
+                        ) : (
+                          'Submit Event'
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </section>
-
-        {/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          {/* Search Bar */}
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Search events by title, description, or organizer..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 border border-navy-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
-            />
-          </div>
-
-          {/* Category Filters */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-navy-700 mb-3">Categories</h3>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => toggleCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCategories.includes(category)
-                      ? 'bg-navy-800 text-white'
-                      : 'bg-navy-50 text-navy-700 hover:bg-navy-100'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Language Filters */}
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-navy-700 mb-3">Languages</h3>
-            <div className="flex flex-wrap gap-2">
-              {languages.map((language) => (
-                <button
-                  key={language}
-                  onClick={() => toggleLanguage(language)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedLanguages.includes(language)
-                      ? 'bg-navy-800 text-white'
-                      : 'bg-navy-50 text-navy-700 hover:bg-navy-100'
-                  }`}
-                >
-                  {language}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Location Filter */}
-          <div>
-            <h3 className="text-sm font-semibold text-navy-700 mb-3">Location</h3>
-            <input
-              type="text"
-              placeholder="Filter by location..."
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-navy-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500"
-            />
-          </div>
-        </div>
 
         {/* Events List */}
         {loading ? (
