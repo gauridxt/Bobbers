@@ -41,12 +41,12 @@ export default function Home() {
               </span>
             </div>
             <h2 className="text-5xl md:text-6xl font-display font-bold text-navy-900 mb-6 leading-tight">
-              Discover Tech Events in
-              <span className="text-navy-600"> Under 2 Minutes</span>
+              Discover Tech Events with
+              <span className="text-navy-600"> Free Food</span>
             </h2>
             <p className="text-xl text-navy-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Curated IT, Data, AI, and Computer Science events for professionals
-              and students in Zurich. Connect, learn, and grow your network.
+              Search for curated IT, Data, AI, and Computer Science events with free food in Zurich.
+              Connect, learn, and grow your network while enjoying complimentary refreshments.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/events" className="btn-primary text-base px-8 py-4">
@@ -95,49 +95,6 @@ export default function Home() {
             <p className="text-navy-600 leading-relaxed">
               Connect with like-minded professionals and expand your network
             </p>
-          </div>
-        </section>
-
-        {/* Status Section */}
-        <section className="py-16">
-          <div className="card p-10 max-w-3xl mx-auto">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-navy-500 to-navy-700 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">🚀</span>
-              </div>
-              <h3 className="text-2xl font-display font-bold text-navy-900 mb-4">
-                Project Setup Complete!
-              </h3>
-              <p className="text-navy-600 mb-8">
-                Your platform is ready. Here's what we've accomplished:
-              </p>
-              <div className="grid sm:grid-cols-2 gap-4 text-left max-w-xl mx-auto">
-                <div className="flex items-start space-x-3 bg-navy-50 p-4 rounded-lg">
-                  <span className="text-green-600 font-bold text-lg">✓</span>
-                  <span className="text-navy-700 font-medium">Next.js with TypeScript</span>
-                </div>
-                <div className="flex items-start space-x-3 bg-navy-50 p-4 rounded-lg">
-                  <span className="text-green-600 font-bold text-lg">✓</span>
-                  <span className="text-navy-700 font-medium">Tailwind CSS integrated</span>
-                </div>
-                <div className="flex items-start space-x-3 bg-cream-100 p-4 rounded-lg">
-                  <span className="text-navy-400 font-bold text-lg">○</span>
-                  <span className="text-navy-600">Supabase database</span>
-                </div>
-                <div className="flex items-start space-x-3 bg-cream-100 p-4 rounded-lg">
-                  <span className="text-navy-400 font-bold text-lg">○</span>
-                  <span className="text-navy-600">Event listing components</span>
-                </div>
-                <div className="flex items-start space-x-3 bg-cream-100 p-4 rounded-lg">
-                  <span className="text-navy-400 font-bold text-lg">○</span>
-                  <span className="text-navy-600">Search functionality</span>
-                </div>
-                <div className="flex items-start space-x-3 bg-cream-100 p-4 rounded-lg">
-                  <span className="text-navy-400 font-bold text-lg">○</span>
-                  <span className="text-navy-600">Filter system</span>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </main>
