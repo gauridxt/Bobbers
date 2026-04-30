@@ -13,15 +13,7 @@ export interface Event {
   location: string;
   category: EventCategory;
   language: EventLanguage;
-  price: number;
-  currency: string;
-  registration_url: string;
-  image_url: string | null;
-  organizer: string | null;
-  tags: string[];
-  is_featured: boolean;
-  capacity: number | null;
-  attendees_count: number;
+  rsvp_url: string;
   created_at?: string;
   updated_at?: string;
 }
