@@ -15,6 +15,7 @@ export default function AdminScraper() {
   
   const [sources, setSources] = useState<ScraperSource[]>([
     { name: 'Eventbrite', url: 'https://www.eventbrite.com/d/switzerland--zurich/events/', enabled: true },
+    { name: 'Meetup', url: 'https://www.meetup.com/find/?location=ch--Zurich&source=EVENTS', enabled: true },
     { name: 'LinkedIn', url: 'https://www.linkedin.com/events/', enabled: false },
   ]);
 
@@ -37,7 +38,7 @@ export default function AdminScraper() {
           scraper_config: {
             url: s.url,
             selectors: {},
-            type: s.name === 'Eventbrite' ? 'static' : 'dynamic'
+            type: (s.name === 'Eventbrite' || s.name === 'Meetup') ? 'static' : 'dynamic'
           },
           enabled: true
         }));

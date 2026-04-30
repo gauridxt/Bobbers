@@ -84,45 +84,58 @@ export async function scrapeEventbrite(): Promise<ScraperResult> {
     if (events.length === 0) {
       console.log('No JSON-LD events found, trying HTML extraction...');
       
-      // Try multiple patterns for event cards
-      const patterns = [
-        /<article[^>]*class="[^"]*event[^"]*"[^>]*>(.*?)<\/article>/gs,
-        /<div[^>]*class="[^"]*event-card[^"]*"[^>]*>(.*?)<\/div>/gs,
-        /<div[^>]*data-testid="[^"]*event[^"]*"[^>]*>(.*?)<\/div>/gs
-      ];
+      // Eventbrite uses data-event-id attributes - extract those sections
+      const eventIdPattern = /data-event-id="(\d+)"/g;
+      const eventIds = Array.from(html.matchAll(eventIdPattern));
+      console.log(`Found ${eventIds.length} events with data-event-id`);
       
-      for (const pattern of patterns) {
-        const cardMatches = Array.from(html.matchAll(pattern));
-        console.log(`Pattern found ${cardMatches.length} potential event cards`);
-        
-        for (const cardMatch of cardMatches) {
-          const cardHtml = (cardMatch as RegExpMatchArray)[1];
+      if (eventIds.length > 0) {
+        // Extract text content around each event ID
+        for (const match of eventIds.slice(0, 20)) { // Limit to first 20
+          const eventId = (match as RegExpMatchArray)[1];
+          const matchIndex = (match as RegExpMatchArray).index || 0;
           
-          // Extract title
-          const titleMatch = cardHtml.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/i);
-          if (titleMatch) {
-            const title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
-            
-            if (title && title.length > 5) {
-              const defaultDate = new Date();
-              defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
-              
-              events.push({
-                title: cleanText(title),
-                description: 'Event details available on Eventbrite',
-                date_time: defaultDate.toISOString(),
-                location: 'Zurich, Switzerland',
-                prices: [],
-                source_url: searchUrl,
-                event_topic: extractTopics(title)
-              });
-              
-              console.log(`Extracted from HTML: ${title}`);
+          // Get surrounding context (2000 chars after the event-id)
+          const context = html.substring(matchIndex, matchIndex + 2000);
+          
+          // Look for title in various formats
+          const titlePatterns = [
+            /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i,
+            /<p[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/p>/i,
+            /<span[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<div[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i,
+            /"name":"([^"]{10,200})"/i, // JSON in HTML
+            /aria-label="([^"]{10,200})"/i
+          ];
+          
+          let title = '';
+          for (const titlePattern of titlePatterns) {
+            const titleMatch = context.match(titlePattern);
+            if (titleMatch && titleMatch[1]) {
+              title = titleMatch[1].replace(/<[^>]*>/g, '').replace(/\\u[\dA-F]{4}/gi, '').trim();
+              if (title && title.length > 10 && title.length < 200) {
+                break;
+              }
             }
           }
+          
+          if (title && title.length > 10) {
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
+            
+            events.push({
+              title: cleanText(title),
+              description: 'Event details available on Eventbrite',
+              date_time: defaultDate.toISOString(),
+              location: 'Zurich, Switzerland',
+              prices: [],
+              source_url: `https://www.eventbrite.com/e/${eventId}`,
+              event_topic: extractTopics(title)
+            });
+            
+            console.log(`Extracted event ${events.length}: ${title}`);
+          }
         }
-        
-        if (events.length > 0) break;
       }
     }
     
