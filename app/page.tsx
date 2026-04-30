@@ -17,7 +17,7 @@ export default function Home() {
               <a href="/" className="text-navy-900 font-bold transition-colors border-b-2 border-navy-900">
                 Home
               </a>
-              <a href="#events" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
+              <a href="/events" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
                 Events
               </a>
               <a href="/about" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
@@ -155,9 +155,9 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-3 text-cream-200">Quick Links</h4>
               <ul className="space-y-2 text-navy-300">
-                <li><a href="#events" className="hover:text-white transition-colors">Events</a></li>
+                <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
+                <li><a href="/events" className="hover:text-white transition-colors">Events</a></li>
                 <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>
