@@ -49,12 +49,12 @@ export default function Home() {
               and students in Zurich. Connect, learn, and grow your network.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="btn-primary text-base px-8 py-4">
+              <a href="/events" className="btn-primary text-base px-8 py-4">
                 Browse Events
-              </button>
-              <button className="btn-secondary text-base px-8 py-4">
+              </a>
+              <a href="/about" className="btn-secondary text-base px-8 py-4">
                 Learn More
-              </button>
+              </a>
             </div>
           </div>
         </section>

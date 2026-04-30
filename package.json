@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "scrape": "node scripts/scrape-events.js"
+    "scrape": "node scripts/scrape-events.js",
+    "test-scraper": "node scripts/test-scraper.js",
+    "seed-db": "node scripts/seed-database.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",
