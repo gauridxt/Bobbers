@@ -267,10 +267,24 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
     if (events.length === 0) {
       console.log('No JSON-LD events found, trying HTML extraction for Meetup...');
       
-      // Meetup uses data-event-id or data-eventid attributes
-      const eventIdPattern = /data-event(?:id|Id)="([^"]+)"/g;
-      const eventIds = Array.from(html.matchAll(eventIdPattern));
-      console.log(`Found ${eventIds.length} Meetup events with data-event-id`);
+      // Try multiple patterns for Meetup event identification
+      const patterns = [
+        /data-event(?:id|Id)="([^"]+)"/g,
+        /data-eventid="([^"]+)"/g,
+        /href="[^"]*\/events\/([^"\/]+)"/g,
+        /\/events\/(\d+)/g
+      ];
+      
+      let eventIds: RegExpMatchArray[] = [];
+      for (const pattern of patterns) {
+        eventIds = Array.from(html.matchAll(pattern));
+        if (eventIds.length > 0) {
+          console.log(`Found ${eventIds.length} Meetup events using pattern: ${pattern}`);
+          break;
+        }
+      }
+      
+      console.log(`Total Meetup event IDs found: ${eventIds.length}`);
       
       if (eventIds.length > 0) {
         for (const match of eventIds.slice(0, 50)) {
