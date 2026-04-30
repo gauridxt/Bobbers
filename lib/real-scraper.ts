@@ -287,49 +287,72 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
       console.log(`Total Meetup event IDs found: ${eventIds.length}`);
       
       if (eventIds.length > 0) {
+        // Tech-related keywords for filtering
+        const techKeywords = [
+          'ai', 'artificial intelligence', 'machine learning', 'deep learning', 'data science',
+          'big data', 'analytics', 'python', 'javascript', 'programming', 'coding', 'developer',
+          'software', 'tech', 'technology', 'computer', 'it ', 'digital', 'web', 'app',
+          'cloud', 'devops', 'blockchain', 'crypto', 'iot', 'cybersecurity', 'security',
+          'database', 'sql', 'api', 'frontend', 'backend', 'fullstack', 'react', 'node',
+          'java', 'c++', 'rust', 'go', 'kotlin', 'swift', 'mobile', 'android', 'ios',
+          'data engineering', 'mlops', 'automation', 'robotics', 'quantum', 'algorithm'
+        ];
+        
         for (const match of eventIds.slice(0, 50)) {
           const eventId = (match as RegExpMatchArray)[1];
           const matchIndex = (match as RegExpMatchArray).index || 0;
           
-          // Get surrounding context
-          const context = html.substring(matchIndex, matchIndex + 2000);
+          // Get larger context to find the actual event title
+          const context = html.substring(Math.max(0, matchIndex - 500), matchIndex + 2000);
           
-          // Look for title in various formats
+          // Look for title in various formats - prioritize actual event titles
           const titlePatterns = [
-            /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i,
-            /<span[^>]*class="[^"]*eventCard[^"]*title[^"]*"[^>]*>([^<]+)<\/span>/i,
-            /<div[^>]*class="[^"]*eventCard[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i,
-            /"name":"([^"]{10,200})"/i,
-            /aria-label="([^"]{10,200})"/i,
-            /<a[^>]*href="[^"]*\/events\/[^"]*"[^>]*>([^<]+)<\/a>/i
+            /<h2[^>]*class="[^"]*eventCard[^"]*title[^"]*"[^>]*>([^<]+)<\/h2>/i,
+            /<h3[^>]*class="[^"]*eventCard[^"]*title[^"]*"[^>]*>([^<]+)<\/h3>/i,
+            /<span[^>]*class="[^"]*text-gray900[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /"eventName":"([^"]{15,200})"/i,
+            /"title":"([^"]{15,200})"/i,
+            /<div[^>]*id="event-title[^"]*"[^>]*>([^<]+)<\/div>/i
           ];
           
           let title = '';
           for (const titlePattern of titlePatterns) {
             const titleMatch = context.match(titlePattern);
             if (titleMatch && titleMatch[1]) {
-              title = titleMatch[1].replace(/<[^>]*>/g, '').replace(/\\u[\dA-F]{4}/gi, '').trim();
-              if (title && title.length > 10 && title.length < 200 && !events.some(e => e.title === title)) {
+              const potentialTitle = titleMatch[1].replace(/<[^>]*>/g, '').replace(/\\u[\dA-F]{4}/gi, '').trim();
+              
+              // Filter out location names and short strings
+              const isLocation = /^(ETH|Zurich|Zürich|Online|Start:|Building|Room|Floor|Street|Avenue|Road)/i.test(potentialTitle);
+              const hasNumbers = /^\d+/.test(potentialTitle);
+              
+              if (!isLocation && !hasNumbers && potentialTitle.length >= 15 && potentialTitle.length < 200) {
+                title = potentialTitle;
                 break;
               }
             }
           }
           
-          if (title && title.length > 10) {
-            const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
+          // Check if title is tech-related
+          if (title && title.length >= 15) {
+            const lowerTitle = title.toLowerCase();
+            const isTechRelated = techKeywords.some(keyword => lowerTitle.includes(keyword));
             
-            events.push({
-              title: cleanText(title),
-              description: 'Event details available on Meetup',
-              date_time: defaultDate.toISOString(),
-              location: 'Zurich, Switzerland',
-              prices: [{ type: 'Free', amount: 0, currency: 'CHF', description: 'Free admission' }],
-              source_url: `https://www.meetup.com/events/${eventId}`,
-              event_topic: extractTopics(title)
-            });
-            
-            console.log(`Extracted Meetup event ${events.length}: ${title}`);
+            if (isTechRelated && !events.some(e => e.title === title)) {
+              const defaultDate = new Date();
+              defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
+              
+              events.push({
+                title: cleanText(title),
+                description: 'Event details available on Meetup',
+                date_time: defaultDate.toISOString(),
+                location: 'Zurich, Switzerland',
+                prices: [{ type: 'Free', amount: 0, currency: 'CHF', description: 'Free admission' }],
+                source_url: `https://www.meetup.com/events/${eventId}`,
+                event_topic: extractTopics(title)
+              });
+              
+              console.log(`Extracted Meetup event ${events.length}: ${title}`);
+            }
           }
         }
       }
