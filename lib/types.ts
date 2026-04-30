@@ -4,7 +4,7 @@ export type EventCategory = 'AI' | 'Data' | 'Process' | 'System' | 'CS';
 // Event language options
 export type EventLanguage = 'English' | 'German' | 'French' | 'Italian';
 
-// Main Event interface based on the data model from README
+// Main Event interface based on the database schema
 export interface Event {
   event_id: string;
   title: string;
@@ -13,7 +13,15 @@ export interface Event {
   location: string;
   category: EventCategory;
   language: EventLanguage;
-  rsvp_url: string;
+  price: number;
+  currency: string;
+  registration_url: string;
+  image_url: string | null;
+  organizer: string | null;
+  tags: string[];
+  is_featured: boolean;
+  capacity: number | null;
+  attendees_count: number;
   created_at?: string;
   updated_at?: string;
 }
