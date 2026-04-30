@@ -130,6 +130,7 @@ bobbers/
 ├── lib/
 │   ├── supabase.ts        # Supabase client & helpers
 │   └── types.ts           # TypeScript types
+├── scrapers/             # (External) Python/Node scripts for data scraping
 ├── public/                # Static assets
 ├── .env.local.example     # Environment variables template
 ├── .gitignore            # Git ignore rules
@@ -137,29 +138,24 @@ bobbers/
 ├── package.json          # Dependencies
 ├── tailwind.config.ts    # Tailwind configuration
 └── tsconfig.json         # TypeScript configuration
-```
+## Development Roadmap
+Phase 1: Frontend Core (Current)
+[x] Project setup & UI scaffolding
+[x] Database schema creation
+[ ] Event fetching logic (Supabase select queries)
+[ ] Search functionality & Category/Language filters
+[ ] Event Cards rendering
 
-## 🎯 Development Roadmap
+Phase 2: Data Aggregation Pipeline (Backend Engine)
+[ ] Build external scraper (e.g., Python + BeautifulSoup/Playwright)
+[ ] Map scraped data to the events table schema
+[ ] Use Supabase service_role key to securely INSERT scraped events into the DB
+[ ] Implement data deduplication (preventing duplicate events on re-scrape)
 
-### Phase 1: Core Features (Current)
-- [x] Project setup
-- [x] Database schema
-- [ ] Event listing page
-- [ ] Search functionality
-- [ ] Category filters
-- [ ] Language filters
-
-### Phase 2: Admin Features
-- [ ] Admin authentication
-- [ ] Event creation form
-- [ ] Event editing
-- [ ] Event deletion
-
-### Phase 3: Enhancement
-- [ ] Responsive design optimization
-- [ ] Performance optimization
-- [ ] SEO improvements
-- [ ] Analytics integration
+Phase 3: Automation & Enhancements
+[ ] Set up CRON jobs (e.g., GitHub Actions or Vercel Cron) to run scrapers daily
+[ ] Automated cleanup script to delete past events
+[ ] SEO & Performance optimization
 
 ## 🛠️ Available Scripts
 
@@ -204,5 +200,3 @@ For issues or questions:
 3. Check Next.js documentation: https://nextjs.org/docs
 
 ---
-
-**Ready to build!** 🚀
