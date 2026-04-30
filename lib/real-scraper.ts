@@ -91,7 +91,7 @@ export async function scrapeEventbrite(): Promise<ScraperResult> {
       
       if (eventIds.length > 0) {
         // Extract text content around each event ID
-        for (const match of eventIds.slice(0, 20)) { // Limit to first 20
+        for (const match of eventIds.slice(0, 50)) { // Limit to first 50
           const eventId = (match as RegExpMatchArray)[1];
           const matchIndex = (match as RegExpMatchArray).index || 0;
           
@@ -113,7 +113,8 @@ export async function scrapeEventbrite(): Promise<ScraperResult> {
             const titleMatch = context.match(titlePattern);
             if (titleMatch && titleMatch[1]) {
               title = titleMatch[1].replace(/<[^>]*>/g, '').replace(/\\u[\dA-F]{4}/gi, '').trim();
-              if (title && title.length > 10 && title.length < 200) {
+              // Remove duplicates by checking if we already have this title
+              if (title && title.length > 10 && title.length < 200 && !events.some(e => e.title === title)) {
                 break;
               }
             }
@@ -259,6 +260,64 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
       } catch (parseError) {
         console.error('Error parsing JSON-LD:', parseError);
         continue;
+      }
+    }
+    
+    // Fallback: Try to extract from HTML if no JSON-LD events found
+    if (events.length === 0) {
+      console.log('No JSON-LD events found, trying HTML extraction for Meetup...');
+      
+      // Meetup uses data-event-id or data-eventid attributes
+      const eventIdPattern = /data-event(?:id|Id)="([^"]+)"/g;
+      const eventIds = Array.from(html.matchAll(eventIdPattern));
+      console.log(`Found ${eventIds.length} Meetup events with data-event-id`);
+      
+      if (eventIds.length > 0) {
+        for (const match of eventIds.slice(0, 50)) {
+          const eventId = (match as RegExpMatchArray)[1];
+          const matchIndex = (match as RegExpMatchArray).index || 0;
+          
+          // Get surrounding context
+          const context = html.substring(matchIndex, matchIndex + 2000);
+          
+          // Look for title in various formats
+          const titlePatterns = [
+            /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i,
+            /<span[^>]*class="[^"]*eventCard[^"]*title[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<div[^>]*class="[^"]*eventCard[^"]*title[^"]*"[^>]*>([^<]+)<\/div>/i,
+            /"name":"([^"]{10,200})"/i,
+            /aria-label="([^"]{10,200})"/i,
+            /<a[^>]*href="[^"]*\/events\/[^"]*"[^>]*>([^<]+)<\/a>/i
+          ];
+          
+          let title = '';
+          for (const titlePattern of titlePatterns) {
+            const titleMatch = context.match(titlePattern);
+            if (titleMatch && titleMatch[1]) {
+              title = titleMatch[1].replace(/<[^>]*>/g, '').replace(/\\u[\dA-F]{4}/gi, '').trim();
+              if (title && title.length > 10 && title.length < 200 && !events.some(e => e.title === title)) {
+                break;
+              }
+            }
+          }
+          
+          if (title && title.length > 10) {
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
+            
+            events.push({
+              title: cleanText(title),
+              description: 'Event details available on Meetup',
+              date_time: defaultDate.toISOString(),
+              location: 'Zurich, Switzerland',
+              prices: [{ type: 'Free', amount: 0, currency: 'CHF', description: 'Free admission' }],
+              source_url: `https://www.meetup.com/events/${eventId}`,
+              event_topic: extractTopics(title)
+            });
+            
+            console.log(`Extracted Meetup event ${events.length}: ${title}`);
+          }
+        }
       }
     }
     
