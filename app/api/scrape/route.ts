@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
+import {
   EventScraperOrchestrator,
   MeetupScraper,
   EventbriteScraper,
@@ -8,6 +8,7 @@ import {
 } from '@/lib/event-scraper';
 import { EventSourceConfig, ScraperResult } from '@/lib/scraper-types';
 import { categorizeEvent, detectLanguage } from '@/lib/scraper-utils';
+import { eventService } from '@/lib/supabase';
 
 /**
  * POST /api/scrape
@@ -46,10 +47,17 @@ export async function POST(request: NextRequest) {
       language: detectLanguage(`${event.title} ${event.description}`)
     }));
 
+    // Store events in database if mode is 'store' or 'both'
+    let storageResult = null;
+    if (mode === 'store' || mode === 'both' || !mode) {
+      storageResult = await eventService.storeScrapedEvents(enrichedEvents);
+    }
+
     return NextResponse.json({
       success: true,
       total_events: enrichedEvents.length,
-      events: enrichedEvents,
+      events: mode === 'preview' ? enrichedEvents : undefined,
+      storage: storageResult,
       results: results.map(r => ({
         source: r.source,
         success: r.success,
