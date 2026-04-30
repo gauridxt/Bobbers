@@ -1,28 +1,71 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap');
+@import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-background: #fdfcfb;
+  --color-foreground: #102a43;
+  
+  /* Navy color palette */
+  --color-navy-50: #f0f4f8;
+  --color-navy-100: #d9e2ec;
+  --color-navy-200: #bcccdc;
+  --color-navy-300: #9fb3c8;
+  --color-navy-400: #829ab1;
+  --color-navy-500: #627d98;
+  --color-navy-600: #486581;
+  --color-navy-700: #334e68;
+  --color-navy-800: #243b53;
+  --color-navy-900: #102a43;
+  
+  /* Cream color palette */
+  --color-cream-50: #fdfcfb;
+  --color-cream-100: #faf8f5;
+  --color-cream-200: #f5f1ea;
+  --color-cream-300: #ede7db;
+  --color-cream-400: #e3d9c6;
+  --color-cream-500: #d4c5a9;
+  --color-cream-600: #c4b193;
+  --color-cream-700: #a89575;
+  --color-cream-800: #8b7a5e;
+  --color-cream-900: #6e6149;
+  
+  /* Font families */
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-family-display: 'Poppins', system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @theme {
+    --color-background: #102a43;
+    --color-foreground: #f0f4f8;
   }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-navy-700 hover:bg-navy-800 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-cream-400 hover:bg-cream-500 text-navy-900 font-medium px-6 py-3 rounded-lg transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-navy-100;
   }
 }
 
