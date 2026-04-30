@@ -130,21 +130,7 @@ export const eventService = {
           location: scrapedEvent.location,
           category: category as EventCategory,
           language: language as EventLanguage,
-          price: scrapedEvent.prices && scrapedEvent.prices.length > 0
-            ? scrapedEvent.prices[0].amount
-            : 0,
-          currency: scrapedEvent.prices && scrapedEvent.prices.length > 0
-            ? scrapedEvent.prices[0].currency
-            : 'CHF',
-          registration_url: scrapedEvent.source_url,
-          image_url: null,
-          organizer: scrapedEvent.companies_attending && scrapedEvent.companies_attending.length > 0
-            ? scrapedEvent.companies_attending[0]
-            : null,
-          tags: scrapedEvent.event_topic || [],
-          is_featured: false,
-          capacity: null,
-          attendees_count: 0
+          rsvp_url: scrapedEvent.source_url
         };
 
         // Check if event already exists (by title and date)

@@ -1,4 +1,16 @@
+'use client';
+
+import { useState } from 'react';
+
 export default function Contact() {
+  // Contact form state
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-cream-100">
       {/* Navigation Header */}
@@ -100,6 +112,8 @@ export default function Contact() {
                   type="text"
                   id="name"
                   name="name"
+                  value={contactForm.name}
+                  onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-4 py-3 rounded-lg border border-navy-200 focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors"
                   placeholder="Your name"
                 />
@@ -113,6 +127,8 @@ export default function Contact() {
                   type="email"
                   id="email"
                   name="email"
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
                   className="w-full px-4 py-3 rounded-lg border border-navy-200 focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors"
                   placeholder="your.email@example.com"
                 />
@@ -126,6 +142,8 @@ export default function Contact() {
                   type="text"
                   id="subject"
                   name="subject"
+                  value={contactForm.subject}
+                  onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
                   className="w-full px-4 py-3 rounded-lg border border-navy-200 focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors"
                   placeholder="What's this about?"
                 />
@@ -139,6 +157,8 @@ export default function Contact() {
                   id="message"
                   name="message"
                   rows={6}
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
                   className="w-full px-4 py-3 rounded-lg border border-navy-200 focus:border-navy-500 focus:ring-2 focus:ring-navy-200 outline-none transition-colors resize-none"
                   placeholder="Tell us more..."
                 />
@@ -153,21 +173,6 @@ export default function Contact() {
           </div>
         </section>
 
-        {/* Additional Info */}
-        <section className="text-center">
-          <div className="card p-10 bg-navy-50">
-            <h3 className="text-2xl font-display font-bold text-navy-900 mb-4">
-              Want to List Your Event?
-            </h3>
-            <p className="text-navy-600 mb-6 max-w-2xl mx-auto">
-              If you're organizing a tech event in Zurich and want it featured on BOBBERS,
-              we'd love to hear about it!
-            </p>
-            <a href="mailto:events@bobbers.tech" className="btn-secondary text-base px-8 py-4 inline-block">
-              Submit Your Event
-            </a>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
