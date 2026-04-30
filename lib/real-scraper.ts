@@ -7,6 +7,24 @@ import { extractPrices, extractTopics, cleanText, parseEventDate } from './scrap
 const SCRAPER_TIMEOUT_MS = 10000;
 const DEFAULT_EVENT_OFFSET_DAYS = 7;
 
+// Tech-related keywords for filtering events
+const TECH_KEYWORDS = [
+  'ai', 'artificial intelligence', 'machine learning', 'deep learning', 'data science',
+  'big data', 'analytics', 'python', 'javascript', 'programming', 'coding', 'developer',
+  'software', 'tech', 'technology', 'computer', 'it ', 'digital', 'web', 'app',
+  'cloud', 'devops', 'blockchain', 'crypto', 'iot', 'cybersecurity', 'security',
+  'database', 'sql', 'api', 'frontend', 'backend', 'fullstack', 'react', 'node',
+  'java', 'c++', 'rust', 'go', 'kotlin', 'swift', 'mobile', 'android', 'ios',
+  'data engineering', 'mlops', 'automation', 'robotics', 'quantum', 'algorithm',
+  'startup', 'innovation', 'engineering', 'science', 'research', 'hackathon',
+  'workshop', 'meetup', 'conference', 'summit', 'networking', 'career'
+];
+
+function isTechRelated(title: string, description: string = ''): boolean {
+  const text = `${title} ${description}`.toLowerCase();
+  return TECH_KEYWORDS.some(keyword => text.includes(keyword));
+}
+
 /**
  * Scrape events from Eventbrite
  */
@@ -120,7 +138,7 @@ export async function scrapeEventbrite(): Promise<ScraperResult> {
             }
           }
           
-          if (title && title.length > 10) {
+          if (title && title.length > 10 && isTechRelated(title)) {
             const defaultDate = new Date();
             defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
             
@@ -134,7 +152,7 @@ export async function scrapeEventbrite(): Promise<ScraperResult> {
               event_topic: extractTopics(title)
             });
             
-            console.log(`Extracted event ${events.length}: ${title}`);
+            console.log(`Extracted tech event ${events.length}: ${title}`);
           }
         }
       }
@@ -287,17 +305,6 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
       console.log(`Total Meetup event IDs found: ${eventIds.length}`);
       
       if (eventIds.length > 0) {
-        // Tech-related keywords for filtering
-        const techKeywords = [
-          'ai', 'artificial intelligence', 'machine learning', 'deep learning', 'data science',
-          'big data', 'analytics', 'python', 'javascript', 'programming', 'coding', 'developer',
-          'software', 'tech', 'technology', 'computer', 'it ', 'digital', 'web', 'app',
-          'cloud', 'devops', 'blockchain', 'crypto', 'iot', 'cybersecurity', 'security',
-          'database', 'sql', 'api', 'frontend', 'backend', 'fullstack', 'react', 'node',
-          'java', 'c++', 'rust', 'go', 'kotlin', 'swift', 'mobile', 'android', 'ios',
-          'data engineering', 'mlops', 'automation', 'robotics', 'quantum', 'algorithm'
-        ];
-        
         for (const match of eventIds.slice(0, 50)) {
           const eventId = (match as RegExpMatchArray)[1];
           const matchIndex = (match as RegExpMatchArray).index || 0;
@@ -332,12 +339,8 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
             }
           }
           
-          // Check if title is tech-related
-          if (title && title.length >= 15) {
-            const lowerTitle = title.toLowerCase();
-            const isTechRelated = techKeywords.some(keyword => lowerTitle.includes(keyword));
-            
-            if (isTechRelated && !events.some(e => e.title === title)) {
+          // Check if title is tech-related and not a duplicate
+          if (title && title.length >= 15 && isTechRelated(title) && !events.some(e => e.title === title)) {
               const defaultDate = new Date();
               defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
               
@@ -351,8 +354,7 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
                 event_topic: extractTopics(title)
               });
               
-              console.log(`Extracted Meetup event ${events.length}: ${title}`);
-            }
+            console.log(`Extracted Meetup tech event ${events.length}: ${title}`);
           }
         }
       }
