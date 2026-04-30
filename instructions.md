@@ -26,7 +26,7 @@
 ## 5. Tech Stack & Architecture (Proposed)
 * **Frontend:** Next.js, Tailwind CSS
 * **Backend/Database:** Supabase (PostgreSQL)
-* **Data Sourcing:** Manual entry for V1, transitioning to targeted web scrapers (Python) in V2.
+* **Data Sourcing:** transitioning to targeted web scrapers Python.
 
 ## 6. Functional Requirements
 * **Search & Filter:** Strict categorization, geolocation, and primary language filtering.
@@ -34,7 +34,7 @@
 * **Data Aggregation:** Backend interface for admins to input and categorize event data.
 
 ## 7. Non-Functional Requirements
-* **Usability:** Mobile-first responsive web design.
+* **Usability:** responsive web design.
 * **Performance:** Sub-second latency on search/filtering to maintain an "interactive" feel.
 
 ## 8. Core Data Model (Draft `Event` Object)
