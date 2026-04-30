@@ -292,20 +292,6 @@ export default function AdminScraper() {
           )}
         </div>
 
-        {/* Instructions */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">📖 How to Use</h3>
-          <ol className="space-y-2 text-blue-800">
-            <li>1. Select the scraping mode (preview, store, or both)</li>
-            <li>2. Enable the sources you want to scrape from</li>
-            <li>3. Click "Start Scraping" to begin</li>
-            <li>4. Review the results and check the database</li>
-          </ol>
-          <p className="mt-4 text-sm text-blue-700">
-            <strong>Note:</strong> LinkedIn scraping requires authentication and may not work without proper credentials.
-            Eventbrite scraping works with publicly available event listings.
-          </p>
-        </div>
       </main>
     </div>
   );
