@@ -8,7 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "scrape": "node scripts/scrape-events.js"
+    "scrape": "node scripts/scrape-events.js",
+    "scrape:auto": "node scripts/automated-scraper.js",
+    "test:scraper": "node scripts/test-eventbrite-scraper.js",
+    "test:db": "node scripts/test-database-integration.js",
+    "test:all": "npm run test:db && npm run test:scraper"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",
