@@ -25,9 +25,9 @@ export default function About() {
               <a href="/about" className="text-navy-900 font-bold transition-colors border-b-2 border-navy-900">
                 About
               </a>
-              <button className="btn-primary text-sm">
-                Get Started
-              </button>
+              <a href="/contact" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
+                Contact
+              </a>
             </nav>
           </div>
         </div>
@@ -173,12 +173,12 @@ export default function About() {
               contribute to our mission, we'd love to hear from you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/" className="btn-primary text-base px-8 py-4 inline-block">
+              <a href="/events" className="btn-primary text-base px-8 py-4 inline-block">
                 Explore Events
               </a>
-              <button className="btn-secondary text-base px-8 py-4">
+              <a href="/contact" className="btn-secondary text-base px-8 py-4 inline-block">
                 Get in Touch
-              </button>
+              </a>
             </div>
           </div>
         </section>
@@ -198,8 +198,9 @@ export default function About() {
               <h4 className="font-semibold mb-3 text-cream-200">Quick Links</h4>
               <ul className="space-y-2 text-navy-300">
                 <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
+                <li><a href="/events" className="hover:text-white transition-colors">Events</a></li>
                 <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>

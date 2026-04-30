@@ -25,9 +25,9 @@ export default function Events() {
               <a href="/about" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
                 About
               </a>
-              <button className="btn-primary text-sm">
-                Get Started
-              </button>
+              <a href="/contact" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
+                Contact
+              </a>
             </nav>
           </div>
         </div>
@@ -66,6 +66,7 @@ export default function Events() {
                 <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
                 <li><a href="/events" className="hover:text-white transition-colors">Events</a></li>
                 <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
+                <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>

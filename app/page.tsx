@@ -23,9 +23,9 @@ export default function Home() {
               <a href="/about" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
                 About
               </a>
-              <button className="btn-primary text-sm">
-                Get Started
-              </button>
+              <a href="/contact" className="text-navy-700 hover:text-navy-900 font-medium transition-colors">
+                Contact
+              </a>
             </nav>
           </div>
         </div>
@@ -49,12 +49,12 @@ export default function Home() {
               and students in Zurich. Connect, learn, and grow your network.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="btn-primary text-base px-8 py-4">
+              <a href="/events" className="btn-primary text-base px-8 py-4">
                 Browse Events
-              </button>
-              <button className="btn-secondary text-base px-8 py-4">
+              </a>
+              <a href="/about" className="btn-secondary text-base px-8 py-4">
                 Learn More
-              </button>
+              </a>
             </div>
           </div>
         </section>
@@ -158,6 +158,7 @@ export default function Home() {
                 <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
                 <li><a href="/events" className="hover:text-white transition-colors">Events</a></li>
                 <li><a href="/about" className="hover:text-white transition-colors">About</a></li>
+                <li><a href="/contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>
