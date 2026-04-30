@@ -18,82 +18,125 @@ export async function scrapeEventbrite(): Promise<ScraperResult> {
     // Eventbrite search URL for Zurich tech events
     const searchUrl = 'https://www.eventbrite.com/d/switzerland--zurich/events/';
     
-    console.log('Fetching Eventbrite events...');
+    console.log('Fetching Eventbrite events from:', searchUrl);
     
     const response = await axios.get(searchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
       },
       timeout: SCRAPER_TIMEOUT_MS
     });
 
     const html = response.data;
+    console.log(`Received HTML response, length: ${html.length} characters`);
     
     // Extract event data using regex patterns
     // Eventbrite uses structured data in their HTML
     const eventPattern = /<script type="application\/ld\+json">(.*?)<\/script>/gs;
-    const matches = html.matchAll(eventPattern);
+    const matches = Array.from(html.matchAll(eventPattern));
+    console.log(`Found ${matches.length} JSON-LD script tags`);
     
     for (const match of matches) {
       try {
-        const jsonData = JSON.parse(match[1]);
+        const jsonData = JSON.parse((match as RegExpMatchArray)[1]);
         
-        if (jsonData['@type'] === 'Event') {
-          const event: ScrapedEventData = {
-            title: jsonData.name || 'Untitled Event',
-            description: jsonData.description || '',
-            date_time: jsonData.startDate || new Date().toISOString(),
-            location: jsonData.location?.name || jsonData.location?.address?.addressLocality || 'Zurich, Switzerland',
-            prices: jsonData.offers ? [{
-              type: 'Regular',
-              amount: parseFloat(jsonData.offers.price) || 0,
-              currency: jsonData.offers.priceCurrency || 'CHF',
-              description: jsonData.offers.name || 'Ticket'
-            }] : [],
-            contact_info: {
-              website: jsonData.url || searchUrl
-            },
-            event_topic: extractTopics(jsonData.name + ' ' + jsonData.description),
-            companies_attending: jsonData.organizer?.name ? [jsonData.organizer.name] : [],
-            presenters: [],
-            source_url: jsonData.url || searchUrl
-          };
-          
-          events.push(event);
+        // Handle both single Event and array of events
+        const eventArray = Array.isArray(jsonData) ? jsonData : [jsonData];
+        
+        for (const item of eventArray) {
+          if (item['@type'] === 'Event') {
+            const event: ScrapedEventData = {
+              title: item.name || 'Untitled Event',
+              description: item.description || '',
+              date_time: item.startDate || new Date().toISOString(),
+              location: item.location?.name || item.location?.address?.addressLocality || 'Zurich, Switzerland',
+              prices: item.offers ? (Array.isArray(item.offers) ? item.offers : [item.offers]).map((offer: any) => ({
+                type: offer.name || 'Regular',
+                amount: parseFloat(offer.price) || 0,
+                currency: offer.priceCurrency || 'CHF',
+                description: offer.description || 'Ticket'
+              })) : [],
+              contact_info: {
+                website: item.url || searchUrl
+              },
+              event_topic: extractTopics((item.name || '') + ' ' + (item.description || '')),
+              companies_attending: item.organizer?.name ? [item.organizer.name] : [],
+              presenters: [],
+              source_url: item.url || searchUrl
+            };
+            
+            events.push(event);
+            console.log(`Extracted event: ${event.title}`);
+          }
         }
       } catch (parseError) {
-        // Skip invalid JSON
+        console.error('Error parsing JSON-LD:', parseError);
         continue;
       }
     }
 
-    // Fallback: Extract from HTML if structured data not found
+    // Fallback: Try to extract from HTML structure
     if (events.length === 0) {
-      const titlePattern = /<h3[^>]*class="[^"]*event-card__title[^"]*"[^>]*>(.*?)<\/h3>/gs;
-      const titleMatches = html.matchAll(titlePattern);
+      console.log('No JSON-LD events found, trying HTML extraction...');
       
-      for (const match of titleMatches) {
-        const title = match[1].replace(/<[^>]*>/g, '').trim();
-        if (title && title.length > 5) {
-          const defaultDate = new Date();
-          defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
+      // Try multiple patterns for event cards
+      const patterns = [
+        /<article[^>]*class="[^"]*event[^"]*"[^>]*>(.*?)<\/article>/gs,
+        /<div[^>]*class="[^"]*event-card[^"]*"[^>]*>(.*?)<\/div>/gs,
+        /<div[^>]*data-testid="[^"]*event[^"]*"[^>]*>(.*?)<\/div>/gs
+      ];
+      
+      for (const pattern of patterns) {
+        const cardMatches = Array.from(html.matchAll(pattern));
+        console.log(`Pattern found ${cardMatches.length} potential event cards`);
+        
+        for (const cardMatch of cardMatches) {
+          const cardHtml = (cardMatch as RegExpMatchArray)[1];
           
-          events.push({
-            title: cleanText(title),
-            description: 'Event details available on Eventbrite',
-            date_time: defaultDate.toISOString(),
-            location: 'Zurich, Switzerland',
-            prices: [],
-            source_url: searchUrl,
-            event_topic: extractTopics(title)
-          });
+          // Extract title
+          const titleMatch = cardHtml.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/i);
+          if (titleMatch) {
+            const title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
+            
+            if (title && title.length > 5) {
+              const defaultDate = new Date();
+              defaultDate.setDate(defaultDate.getDate() + DEFAULT_EVENT_OFFSET_DAYS);
+              
+              events.push({
+                title: cleanText(title),
+                description: 'Event details available on Eventbrite',
+                date_time: defaultDate.toISOString(),
+                location: 'Zurich, Switzerland',
+                prices: [],
+                source_url: searchUrl,
+                event_topic: extractTopics(title)
+              });
+              
+              console.log(`Extracted from HTML: ${title}`);
+            }
+          }
         }
+        
+        if (events.length > 0) break;
       }
     }
+    
+    console.log(`Total events extracted: ${events.length}`);
 
   } catch (error) {
-    errors.push(`Eventbrite scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const errorMsg = `Eventbrite scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    errors.push(errorMsg);
     console.error('Eventbrite scraping error:', error);
+    
+    if (axios.isAxiosError(error)) {
+      console.error('Response status:', error.response?.status);
+      console.error('Response headers:', error.response?.headers);
+    }
   }
 
   return {
@@ -145,60 +188,78 @@ export async function scrapeMeetup(): Promise<ScraperResult> {
   try {
     const searchUrl = 'https://www.meetup.com/find/?location=ch--Zurich&source=EVENTS';
     
-    console.log('Fetching Meetup events...');
+    console.log('Fetching Meetup events from:', searchUrl);
     
     const response = await axios.get(searchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
       },
       timeout: SCRAPER_TIMEOUT_MS
     });
 
     const html = response.data;
+    console.log(`Received HTML response, length: ${html.length} characters`);
     
     // Meetup uses structured data
     const scriptPattern = /<script type="application\/ld\+json">(.*?)<\/script>/gs;
-    const matches = html.matchAll(scriptPattern);
+    const matches = Array.from(html.matchAll(scriptPattern));
+    console.log(`Found ${matches.length} JSON-LD script tags`);
     
     for (const match of matches) {
       try {
-        const jsonData = JSON.parse(match[1]);
+        const jsonData = JSON.parse((match as RegExpMatchArray)[1]);
         
-        if (jsonData['@type'] === 'Event' || (Array.isArray(jsonData) && jsonData.some((item: any) => item['@type'] === 'Event'))) {
-          const eventData = Array.isArray(jsonData) ? jsonData.find((item: any) => item['@type'] === 'Event') : jsonData;
-          
-          if (eventData) {
+        // Handle both single Event and array of events
+        const eventArray = Array.isArray(jsonData) ? jsonData : [jsonData];
+        
+        for (const item of eventArray) {
+          if (item['@type'] === 'Event') {
             const event: ScrapedEventData = {
-              title: eventData.name || 'Untitled Event',
-              description: eventData.description || '',
-              date_time: eventData.startDate || new Date().toISOString(),
-              location: eventData.location?.name || eventData.location?.address?.addressLocality || 'Zurich, Switzerland',
-              prices: eventData.offers ? [{
-                type: eventData.offers.price === '0' ? 'Free' : 'Regular',
-                amount: parseFloat(eventData.offers.price) || 0,
-                currency: eventData.offers.priceCurrency || 'CHF',
-                description: eventData.offers.name || 'Ticket'
-              }] : [{ type: 'Free', amount: 0, currency: 'CHF', description: 'Free admission' }],
+              title: item.name || 'Untitled Event',
+              description: item.description || '',
+              date_time: item.startDate || new Date().toISOString(),
+              location: item.location?.name || item.location?.address?.addressLocality || 'Zurich, Switzerland',
+              prices: item.offers ? (Array.isArray(item.offers) ? item.offers : [item.offers]).map((offer: any) => ({
+                type: offer.price === '0' || offer.price === 0 ? 'Free' : 'Regular',
+                amount: parseFloat(offer.price) || 0,
+                currency: offer.priceCurrency || 'CHF',
+                description: offer.name || 'Ticket'
+              })) : [{ type: 'Free', amount: 0, currency: 'CHF', description: 'Free admission' }],
               contact_info: {
-                website: eventData.url || searchUrl
+                website: item.url || searchUrl
               },
-              event_topic: extractTopics(eventData.name + ' ' + eventData.description),
-              companies_attending: eventData.organizer?.name ? [eventData.organizer.name] : [],
+              event_topic: extractTopics((item.name || '') + ' ' + (item.description || '')),
+              companies_attending: item.organizer?.name ? [item.organizer.name] : [],
               presenters: [],
-              source_url: eventData.url || searchUrl
+              source_url: item.url || searchUrl
             };
             
             events.push(event);
+            console.log(`Extracted event: ${event.title}`);
           }
         }
       } catch (parseError) {
+        console.error('Error parsing JSON-LD:', parseError);
         continue;
       }
     }
+    
+    console.log(`Total events extracted: ${events.length}`);
 
   } catch (error) {
-    errors.push(`Meetup scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const errorMsg = `Meetup scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    errors.push(errorMsg);
     console.error('Meetup scraping error:', error);
+    
+    if (axios.isAxiosError(error)) {
+      console.error('Response status:', error.response?.status);
+      console.error('Response headers:', error.response?.headers);
+    }
   }
 
   return {
